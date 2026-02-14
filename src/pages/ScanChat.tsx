@@ -136,7 +136,7 @@ export default function ScanChat() {
   }
 
   const lastAssistantIdx = [...messages].reverse().findIndex((m) => m.role === "assistant");
-  const showActionsAtIdx = lastAssistantIdx >= 0 ? messages.length - 1 - lastAssistantIdx : -1;
+  const lastAssistantMsgIdx = lastAssistantIdx >= 0 ? messages.length - 1 - lastAssistantIdx : -1;
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] max-w-2xl mx-auto">
@@ -180,9 +180,12 @@ export default function ScanChat() {
             content={msg.content}
             metadata={msg.metadata}
             onAction={handleAction}
-            showActions={idx === showActionsAtIdx && scan?.category === "FOOD" && scan?.nutrition != null}
-            nutrition={idx === showActionsAtIdx ? scan?.nutrition : null}
+            onQuickReply={(reply) => sendMessage(reply)}
+            showActions={idx === lastAssistantMsgIdx && scan?.category === "FOOD" && scan?.nutrition != null}
+            showQuickReplies={idx === lastAssistantMsgIdx && !sending}
+            nutrition={idx === lastAssistantMsgIdx ? scan?.nutrition : null}
             category={msg.role === "assistant" ? scan?.category : null}
+            sending={sending}
           />
         ))}
         {sending && (

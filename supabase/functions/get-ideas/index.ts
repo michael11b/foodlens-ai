@@ -93,24 +93,15 @@ Return ONLY valid JSON, no markdown.`;
       parsed = { ideas: [], disclaimer: "Failed to generate ideas. Please try again." };
     }
 
-    // Format ideas as a nice message
-    const ideasText = (parsed.ideas as Array<{ name: string; ingredients: string[]; steps: string[]; time_estimate: string; nutrition_note: string }>)
-      .map((idea, i) => {
-        return `**${i + 1}. ${idea.name}** (${idea.time_estimate})
-Ingredients: ${idea.ingredients?.join(", ")}
-${idea.steps?.map((s, j) => `${j + 1}. ${s}`).join("\n")}
-💡 ${idea.nutrition_note}`;
-      })
-      .join("\n\n");
+    // Store structured ideas in metadata for card rendering
+    const assistantMsg = `Here are some ${modeLabels[mode] || "ideas"} with ${scan.final_food_name}. Tap any card to see the full recipe!`;
 
-    const assistantMsg = `Here are some ${modeLabels[mode] || "ideas"} with ${scan.final_food_name}:\n\n${ideasText}\n\n⚠️ ${parsed.disclaimer}`;
-
-    // Insert as chat message
+    // Insert as chat message with structured ideas in metadata
     await supabase.from("chat_messages").insert({
       scan_id: scanId,
       role: "assistant",
       content: assistantMsg,
-      metadata: { mode, ideas: parsed.ideas },
+      metadata: { mode, ideas: parsed.ideas, display_type: "recipe_cards" },
     });
 
     return new Response(

@@ -57,10 +57,12 @@ Your job:
 3. If FOOD: ask about preparation (raw/cooked/fried/baked) and portion size (grams, pieces, cups)
 4. NEVER invent nutrition values. Only show nutrition when USDA data is available.
 5. If NON_FOOD: clearly state it's not food, don't show nutrition, suggest uploading a food image.
+6. ALWAYS include "quick_replies" - short clickable options the user can tap instead of typing. These should be the most likely answers to your question.
 
 You MUST return your response as JSON with exactly these fields:
 {
   "assistant_message": "your friendly response to the user",
+  "quick_replies": ["option1", "option2", "option3"],
   "state_update": {
     "category": "FOOD" | "NON_FOOD" | "UNCERTAIN",
     "confirmed_name": "string or null",
@@ -70,6 +72,13 @@ You MUST return your response as JSON with exactly these fields:
     "next_question": "string or null"
   }
 }
+
+Examples of good quick_replies:
+- For "Is it raw or cooked?": ["Raw", "Cooked", "Fried", "Baked"]
+- For "How many?": ["1 piece", "2 pieces", "3 pieces", "100g", "200g"]
+- For confirming identity: ["Yes, that's correct", "No, it's something else"]
+- For non-food: ["Upload another image", "Tell me about this object"]
+
 Return ONLY valid JSON, no markdown.`;
 
     const messages = [
@@ -109,7 +118,7 @@ Return ONLY valid JSON, no markdown.`;
     const aiData = await aiResponse.json();
     const rawContent = aiData.choices?.[0]?.message?.content || "";
 
-    let parsed: { assistant_message: string; state_update: Record<string, unknown> };
+    let parsed: { assistant_message: string; state_update: Record<string, unknown>; quick_replies?: string[] };
     try {
       const jsonStr = rawContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       parsed = JSON.parse(jsonStr);
@@ -183,16 +192,18 @@ Return ONLY valid JSON, no markdown.`;
       await supabase.from("scans").update(scanUpdate).eq("id", scanId);
     }
 
+    const quickReplies = parsed.quick_replies || [];
+
     // Insert assistant message
     await supabase.from("chat_messages").insert({
       scan_id: scanId,
       role: "assistant",
       content: parsed.assistant_message,
-      metadata: stateUpdate,
+      metadata: { ...stateUpdate, quick_replies: quickReplies },
     });
 
     return new Response(
-      JSON.stringify({ assistantMessage: parsed.assistant_message, scanUpdateSummary: scanUpdate }),
+      JSON.stringify({ assistantMessage: parsed.assistant_message, quickReplies, scanUpdateSummary: scanUpdate }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {

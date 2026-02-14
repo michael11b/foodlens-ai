@@ -58,16 +58,22 @@ export default function ScanChat() {
     const channel = supabase
       .channel(`scan-${id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `scan_id=eq.${id}` }, (payload) => {
+        console.log("[realtime] new chat message:", payload.new);
         const newMsg = payload.new as unknown as Message;
         setMessages((prev) => {
-          if (prev.find((m) => m.id === newMsg.id)) return prev;
-          return [...prev, newMsg];
+          // Remove optimistic messages with temp IDs and add the real one
+          const withoutOptimistic = prev.filter((m) => !(m.role === "user" && m.id === newMsg.id));
+          if (withoutOptimistic.find((m) => m.id === newMsg.id)) return prev;
+          return [...withoutOptimistic, newMsg];
         });
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "scans", filter: `id=eq.${id}` }, (payload) => {
+        console.log("[realtime] scan updated:", payload.new);
         setScan(payload.new as unknown as Scan);
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log("[realtime] subscription status:", status);
+      });
 
     return () => { supabase.removeChannel(channel); };
   }, [id]);
@@ -91,9 +97,13 @@ export default function ScanChat() {
       });
       if (error) throw error;
       
-      // Refresh scan data
-      const { data: updatedScan } = await supabase.from("scans").select("*").eq("id", id).single();
-      if (updatedScan) setScan(updatedScan as unknown as Scan);
+      // Refresh messages and scan data as fallback (in case realtime missed them)
+      const [msgRes, scanRes] = await Promise.all([
+        supabase.from("chat_messages").select("*").eq("scan_id", id).order("created_at", { ascending: true }),
+        supabase.from("scans").select("*").eq("id", id).single(),
+      ]);
+      if (msgRes.data) setMessages(msgRes.data as unknown as Message[]);
+      if (scanRes.data) setScan(scanRes.data as unknown as Scan);
     } catch (err) {
       console.error("Chat error:", err);
       toast({
@@ -115,6 +125,10 @@ export default function ScanChat() {
         body: { scanId: id, mode: action },
       });
       if (error) throw error;
+      
+      // Fallback: refresh messages
+      const { data: msgs } = await supabase.from("chat_messages").select("*").eq("scan_id", id).order("created_at", { ascending: true });
+      if (msgs) setMessages(msgs as unknown as Message[]);
     } catch (err) {
       console.error("Action error:", err);
       toast({

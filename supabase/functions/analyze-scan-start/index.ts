@@ -55,8 +55,17 @@ serve(async (req) => {
   "top_confidence": 0.0 to 1.0,
   "candidates": [{"label": "name", "confidence": 0.0}],
   "initial_category": "FOOD" or "NON_FOOD" or "UNCERTAIN",
-  "assistant_message": "A friendly message presenting your findings and asking the user to confirm. If food, ask if raw/cooked. If non-food, mention it's not food and suggest uploading a food image."
+  "assistant_message": "A friendly message presenting your findings and asking the user to confirm. If food, ask if raw/cooked. If non-food, mention it's not food and suggest uploading a food image.",
+  "quick_replies": ["option1", "option2", "option3"]
 }
+
+The "quick_replies" field MUST contain 3-5 short clickable options the user can tap to respond quickly.
+Examples:
+- For food items: ["Yes, that's right", "No, it's something else", "Raw", "Cooked", "Fried"]
+- If you're asking about preparation: ["Raw", "Cooked", "Fried", "Baked"]
+- For non-food: ["Upload another image", "Tell me about this object"]
+- For uncertain: ["Yes", "No", "Not sure"]
+
 Return ONLY valid JSON, no markdown.`
           },
           {
@@ -104,12 +113,13 @@ Return ONLY valid JSON, no markdown.`
       status: "PROCESSING",
     }).eq("id", scanId);
 
-    // Create first assistant message
+    // Create first assistant message with quick replies
+    const quickReplies = (parsed.quick_replies as string[]) || ["Yes, that's correct", "No, it's something else"];
     await supabase.from("chat_messages").insert({
       scan_id: scanId,
       role: "assistant",
       content: (parsed.assistant_message as string) || "I'm analyzing your image...",
-      metadata: { candidates: parsed.candidates },
+      metadata: { candidates: parsed.candidates, quick_replies: quickReplies },
     });
 
     return new Response(JSON.stringify({ ok: true }), {

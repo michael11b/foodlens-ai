@@ -1,1 +1,10 @@
 project_id = "tavhxpajinsbwvogtybg"
+
+[functions.analyze-scan-start]
+verify_jwt = false
+
+[functions.chat-turn]
+verify_jwt = false
+
+[functions.get-ideas]
+verify_jwt = false

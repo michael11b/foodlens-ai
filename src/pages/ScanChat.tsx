@@ -61,10 +61,16 @@ export default function ScanChat() {
         console.log("[realtime] new chat message:", payload.new);
         const newMsg = payload.new as unknown as Message;
         setMessages((prev) => {
-          // Remove optimistic messages with temp IDs and add the real one
-          const withoutOptimistic = prev.filter((m) => !(m.role === "user" && m.id === newMsg.id));
-          if (withoutOptimistic.find((m) => m.id === newMsg.id)) return prev;
-          return [...withoutOptimistic, newMsg];
+          // Already have this exact server message? Skip.
+          if (prev.find((m) => m.id === newMsg.id)) return prev;
+          // If it's a user message, remove any optimistic duplicate (same content, different temp ID)
+          if (newMsg.role === "user") {
+            const withoutOptimistic = prev.filter(
+              (m) => !(m.role === "user" && m.content === newMsg.content)
+            );
+            return [...withoutOptimistic, newMsg];
+          }
+          return [...prev, newMsg];
         });
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "scans", filter: `id=eq.${id}` }, (payload) => {

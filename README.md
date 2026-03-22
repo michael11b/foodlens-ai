@@ -1,6 +1,8 @@
 # Welcome to your Lovable project
 
-## Project info
+# fuck welcome
+
+## Project infotesting bitch
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 

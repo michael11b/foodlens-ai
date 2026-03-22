@@ -1,8 +1,6 @@
 # Project Structure: foodlens-ai
 
-sdlkjflskdjflsjdlkfjslkdjfljsdlkfjsk
-
-## Root Directory
+## Root Directorysdkfjsdlkjf
 - `public/` - Static assets (icons, images)
 - `src/` - Application source code
   - `components/` - Shared UI components (shadcn/ui)

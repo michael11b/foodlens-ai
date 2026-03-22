@@ -4,7 +4,7 @@
 - `public/` - Static assets (icons, images)
 - `src/` - Application source code
   - `components/` - Shared UI components (shadcn/ui)
-  - `hooks/` - Custom React hooks
+  - `hooks/` - Custom React hooks this sucks.fuck the world
   - `lib/` - Utility functions and clients (e.g., Supabase)
   - `pages/` - Main application views
   - `types/` - TypeScript definitions

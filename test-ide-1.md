@@ -25,6 +25,8 @@
 
 ##If this dosent work im fucking wasting my time
 
+##Testing again lets see what this lovable mother fucker has really done
+
 ## Future Improvements
 - **Security Hardening**: Implement stricter Row Level Security (RLS) policies in Supabase.
 - **CI/CD Pipeline**: Automate deployment to the VPS using GitHub Actions.

@@ -1,5 +1,7 @@
 # Project Structure: foodlens-ai
 
+sdlkjflskdjflsjdlkfjslkdjfljsdlkfjsk
+
 ## Root Directory
 - `public/` - Static assets (icons, images)
 - `src/` - Application source code
